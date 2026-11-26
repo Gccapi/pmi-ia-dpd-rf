@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# LaTeX (fichiers temporaires Tectonic)
+*.aux
+*.log
+*.out
+*.xdv
+*.synctex.gz
