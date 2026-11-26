@@ -5,12 +5,12 @@ from torch.utils.data import TensorDataset, DataLoader
 from scipy.signal import firwin, upfirdn, welch
 import matplotlib.pyplot as plt
 
-# Fixer les graines pour la reproductibilité
+# Fixer les seed pour la reproduct
 np.random.seed(42)
 torch.manual_seed(42)
 
 # ==========================================
-# 1. GÉNÉRATION DU SIGNAL RF (16-QAM suréchantillonné)
+# GÉNÉRATION DU SIGNAL RF (16-QAM suréchantillonné)
 # ==========================================
 def generate_rf_signal(num_symbols=6000, sps=4, num_taps=33):
     # Symboles 16-QAM normalisés
@@ -32,7 +32,7 @@ def generate_rf_signal(num_symbols=6000, sps=4, num_taps=33):
     return signal, symbols, delay
 
 # ==========================================
-# 2. MODÈLE D'AMPLIFICATEUR NON-LINÉAIRE AVEC MÉMOIRE
+# MODÈLE D'AMPLIFICATEUR NON-LINÉAIRE AVEC MÉMOIRE
 # ==========================================
 def power_amplifier(x):
     """Modèle polynomial avec mémoire (ordres 1, 3, 5 + 2 taps de mémoire)"""
@@ -49,7 +49,7 @@ def power_amplifier(x):
 LINEAR_GAIN = 1.0 + 0.05j
 
 # ==========================================
-# 3. EXTRACTION DE FEATURES & BLOC IA (RVTDNN)
+# EXTRACTION DE FEATURES & BLOC IA (RVTDNN)
 # ==========================================
 def extract_features(sig, memory_depth=3):
     """Crée les entrées [I, Q, |x|, |x|^2] sur une fenêtre temporelle"""
@@ -70,9 +70,12 @@ class LightweightDPD(nn.Module):
             nn.Tanh(),
             nn.Linear(16, 2)
         )
+        # Initialisation proche de 0 (mais non nulle) pour laisser passer le gradient dès le début
+        nn.init.normal_(self.net[-1].weight, mean=0.0, std=1e-3)
+        nn.init.zeros_(self.net[-1].bias)
         
     def forward(self, x):
-        return self.net(x)
+        return x[:, :2] + self.net(x)
 
 def apply_dpd(model, sig, memory_depth=3):
     model.eval()
@@ -82,7 +85,7 @@ def apply_dpd(model, sig, memory_depth=3):
     return out[:, 0] + 1j * out[:, 1]
 
 # ==========================================
-# 4. ENTRAÎNEMENT (Indirect Learning Architecture)
+# TRAINING (Indirect Learning Architecture)
 # ==========================================
 MEMORY_DEPTH = 3
 x_train, _, _ = generate_rf_signal(num_symbols=8000)
@@ -94,21 +97,24 @@ Y_tensor = torch.tensor(np.stack([x_train.real, x_train.imag], axis=1).astype(np
 
 loader = DataLoader(TensorDataset(X_tensor, Y_tensor), batch_size=512, shuffle=True)
 model = LightweightDPD(in_features=4 * MEMORY_DEPTH)
-optimizer = torch.optim.Adam(model.parameters(), lr=3e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=5e-3)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
 criterion = nn.MSELoss()
 
 total_params = sum(p.numel() for p in model.parameters())
 print(f"Nombre total de paramètres du modèle DPD : {total_params}")
 
-for epoch in range(60):
+
+for epoch in range(150):
     for bx, by in loader:
         optimizer.zero_grad()
         loss = criterion(model(bx), by)
         loss.backward()
         optimizer.step()
+    scheduler.step()
 
 # ==========================================
-# 5. TEST ET MÉTRIQUES RF (NMSE, PSD, Constellation)
+# TEST ET MÉTRIQUES RF (NMSE, PSD, Constellation)
 # ==========================================
 x_test, syms_test, delay = generate_rf_signal(num_symbols=5000)
 
