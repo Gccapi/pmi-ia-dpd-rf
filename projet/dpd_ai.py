@@ -12,7 +12,7 @@ torch.manual_seed(42)
 # ==========================================
 # GÉNÉRATION DU SIGNAL RF (16-QAM suréchantillonné)
 # ==========================================
-def generate_rf_signal(num_symbols=6000, sps=4, num_taps=33):
+def generate_rf_signal(num_symbols=6000, sps=4, num_taps=33, rms_level=0.48):
     # Symboles 16-QAM normalisés
     alphabet = np.array([-3, -1, 1, 3])
     re = np.random.choice(alphabet, num_symbols)
@@ -27,7 +27,7 @@ def generate_rf_signal(num_symbols=6000, sps=4, num_taps=33):
     signal = upfirdn(rrc_filter, symbols, up=sps)
     
     # Normalisation de la puissance d'entrée (proche zone de compression)
-    signal = signal / np.sqrt(np.mean(np.abs(signal)**2)) * 0.65
+    signal = signal / np.sqrt(np.mean(np.abs(signal)**2)) * rms_level
     delay = (num_taps - 1) // 2
     return signal, symbols, delay
 
@@ -88,7 +88,7 @@ def apply_dpd(model, sig, memory_depth=3):
 # TRAINING (Indirect Learning Architecture)
 # ==========================================
 MEMORY_DEPTH = 3
-x_train, _, _ = generate_rf_signal(num_symbols=8000)
+x_train, _, _ = generate_rf_signal(num_symbols=12000, rms_level = 0.68)
 y_train = power_amplifier(x_train) / LINEAR_GAIN  # Sortie PA normalisée
 
 # En ILA : Entrée du NN = sortie PA normalisée | Cible = entrée PA
@@ -116,7 +116,7 @@ for epoch in range(150):
 # ==========================================
 # TEST ET MÉTRIQUES RF (NMSE, PSD, Constellation)
 # ==========================================
-x_test, syms_test, delay = generate_rf_signal(num_symbols=5000)
+x_test, syms_test, delay = generate_rf_signal(num_symbols=5000, rms_level = 0.48)
 
 # Cas 1 : Sans DPD
 y_no_dpd = power_amplifier(x_test) / LINEAR_GAIN
