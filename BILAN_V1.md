@@ -41,7 +41,7 @@ En V1.0/V1.1, l'amplificateur écrasait les crêtes du signal d'entraînement au
 * **Caractéristique AM/AM :** Redressement complet de la courbe de compression sur la diagonale idéale.
 * **Constellation 16-QAM :** Recentrage précis des 16 symboles, y compris les 4 symboles de crête aux extrémités.
 
-*(Voir la capture associée : `fig_v1_2_results.png`)*
+*(Voir la capture associée : `Figure_resultV1.2.png`)*
 
 ---
 
