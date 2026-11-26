@@ -1,0 +1,80 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault} % Police Sans-Serif propre
+
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% Palette de couleurs
+\definecolor{primary}{RGB}{15, 23, 42}     % Navy très sombre
+\definecolor{accent}{RGB}{30, 58, 138}    % Bleu profond
+\definecolor{lightbg}{RGB}{248, 250, 252} % Gris très clair
+\definecolor{border}{RGB}{226, 232, 240}  % Bordure subtile
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accent,
+    urlcolor=accent
+}
+
+\setlist[itemize]{label=--, leftmargin=*}
+
+\begin{document}
+
+% En-tête / Titre du document
+\begin{center}
+    {\small \textbf{PROJET MASTER (PMI) --- SYSTEMES EMBARQUES RADIOFREQUENCES}}\\[0.5em]
+    {\Large \textbf{\color{primary} Proposition d'Axe d'Étude : Linéarisation par Prédistorsion Numérique (DPD) basée sur l'IA}} \\[0.5em]
+    \rule{\textwidth}{1pt}
+\end{center}
+
+\vspace{0.5em}
+
+\section*{1. Synthèse et Vision Globale du Sujet}
+Dans le cadre de l'intégration de l'Intelligence Artificielle au sein des chaînes radiofréquences (RF) embarquées, nous proposons de focaliser nos travaux sur une brique stratégique à l'émission : \textbf{la Linéarisation par Prédistorsion Numérique (DPD) assistée par IA} pour l'Amplificateur de Puissance (PA).
+
+\begin{itemize}
+    \item \textbf{Verrou RF \& Problématique SWaP :} L'amplificateur de puissance est le composant le plus énergivore d'un émetteur radio (représentant 50\% à 70\% de la consommation totale). Pour maximiser le rendement énergétique sur un vecteur contraint (drone, CubeSat), le PA est poussé proche de sa zone de saturation. Cela engendre de fortes non-linéarités et de la distorsion hors-bande (interférences adjacentes).
+    \item \textbf{Apport de l'IA :} Les méthodes classiques de DPD (ex. polynômes de Volterra) s'adaptent difficilement en temps réel aux variations dynamiques (température, changement de bande, dérive des composants). Un réseau de neurones léger ou adaptatif (\textit{Deep Unfolding}, \textit{Meta-Learning}) permet de corriger ces non-linéarités complexes avec une grande agilité.
+    \item \textbf{Objectif de l'étude :} Démontrer que le surcoût calculatoire d'une brique IA embarquée sur FPGA/SDR (quelques milliwatts) permet de libérer une économie nette de plusieurs Watts au niveau de l'étage d'amplification RF.
+\end{itemize}
+
+\section*{2. Adéquation avec la Feuille de Route du Projet}
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Exigences de cadrage} & \textbf{Prise en compte dans cette proposition} \\ \midrule
+\textbf{Éviter l'effet catalogue} & Focus ciblé sur 1 brique unique à l'émission : Amplification/DPD. \\
+\textbf{Critique SWaP / Faisabilité} & Analyse bilan énergétique : Énergie de calcul IA vs. Gain RF. \\
+\textbf{Intégration SDR / FPGA} & Brique numérique quantifiée, positionnée en amont du DAC. \\
+\textbf{Test / Simulation pratique} & Modélisation Python/MATLAB d'un PA non-linéaire + IA DPD. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section*{3. Matériel et Littérature Scientifique de Référence}
+Notre étude s'appuiera sur un corpus d'articles récents analysant l'efficacité matérielle et l'accélération sur puce :
+\begin{enumerate}
+    \item \textbf{Adaptive DL-DPD :} Modèles DNN à sous-modules pour corriger les effets de mémoire et non-linéarités sous contraintes dynamiques.
+    \item \textbf{Hardware Acceleration of NNs for Next-Gen DPD :} Synthèse sur la faisabilité d'implémentation DPD sur cibles reconfigurables (FPGA/ASIC) et réduction de la latence.
+    \item \textbf{12LP+ FinFET Mixed-Signal ML Engine (105 MS/s, 4.18 nJ/inférence) :} Preuve matérielle concrète qu'un moteur ML dédié en couche physique respecte le budget énergétique embarqué.
+\end{enumerate}
+
+\section*{4. Livrables et Démarche Pratique Envisagée}
+\begin{itemize}
+    \item \textbf{Étape 1 -- Modélisation du canal d'émission :} Simulation sous Python/MATLAB d'un signal modulé (ex. OFDM / QAM) traversant un amplificateur non-linéaire avec effet de mémoire.
+    \item \textbf{Étape 2 -- Implémentation du prédistorsionneur IA :} Conception et entraînement d'un réseau de neurones léger assurant la fonction inverse.
+    \item \textbf{Étape 3 -- Quantification et Adéquation Matérielle :} Quantification du modèle (passage de FP32 vers Int8/Int4) pour mesurer la baisse d'empreinte mémoire et le nombre d'opérations (FLOPs), en évaluant la perte subie sur l'EVM (\textit{Error Vector Magnitude}) et l'ACPR (\textit{Adjacent Channel Power Ratio}).
+\end{itemize}
+
+
+
+\end{document}
